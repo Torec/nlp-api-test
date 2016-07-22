@@ -31,14 +31,20 @@ public class NlpController {
 
     @RequestMapping("/analyzeEntities")
     public List<Entity> analyzeEntities(@RequestParam String text) throws IOException {
-        AnalyzeEntitiesResponse response = callAnalyzeEntities(text);
+        final Features features = new Features()
+                .setExtractEntities(true);
+        final String msg = "Analyzing entities for: [" + text + "]";
+        AnnotateTextResponse response = callAnnotateText(text, features, msg);
         log.info(response.toPrettyString());
         return response.getEntities();
     }
 
     @RequestMapping("/analyzeSentiment")
     public Sentiment analyzeSentiment(@RequestParam String text) throws IOException {
-        AnalyzeSentimentResponse response = callAnalyzeSentiment(text);
+        final Features features = new Features()
+                .setExtractDocumentSentiment(true);
+        final String msg = "Analyzing sentiment for: [" + text + "]";
+        AnnotateTextResponse response = callAnnotateText(text, features, msg);
         log.info(response.toPrettyString());
         return response.getDocumentSentiment();
     }
@@ -85,27 +91,7 @@ public class NlpController {
         log.info("Indexed into ES: " + indexResponse.getId());
     }
 
-    private AnalyzeEntitiesResponse callAnalyzeEntities(@RequestParam String text) throws IOException {
-        AnalyzeEntitiesRequest request =
-                new AnalyzeEntitiesRequest()
-                        .setDocument(new Document().setContent(text).setType("PLAIN_TEXT"))
-                        .setEncodingType("UTF16");
-        CloudNaturalLanguageAPI.Documents.AnalyzeEntities analyze =
-                languageApi.documents().analyzeEntities(request);
-        log.info("Analyzing entities for: [" + text + "]");
-        return analyze.execute();
-    }
-
-    private AnalyzeSentimentResponse callAnalyzeSentiment(@RequestParam String text) throws IOException {
-        AnalyzeSentimentRequest request =
-                new AnalyzeSentimentRequest().setDocument(new Document().setContent(text).setType("PLAIN_TEXT"));
-        CloudNaturalLanguageAPI.Documents.AnalyzeSentiment analyze =
-                languageApi.documents().analyzeSentiment(request);
-        log.info("Analyzing sentiment for: [" + text + "]");
-        return analyze.execute();
-    }
-
-    private AnnotateTextResponse callAnnotateText(@RequestParam String text, Features features, String msg)
+    private AnnotateTextResponse callAnnotateText(String text, Features features, String msg)
             throws IOException {
         AnnotateTextRequest request = new AnnotateTextRequest()
                 .setDocument(new Document().setContent(text).setType("PLAIN_TEXT"))
