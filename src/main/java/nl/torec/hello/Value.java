@@ -1,4 +1,4 @@
-package trifork.nlp.hello;
+package nl.torec.hello;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

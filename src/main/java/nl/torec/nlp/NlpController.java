@@ -1,18 +1,22 @@
-package trifork.nlp.nlpAPI;
+package nl.torec.nlp;
 
 import com.google.api.services.language.v1beta1.CloudNaturalLanguageAPI;
 import com.google.api.services.language.v1beta1.model.*;
+import com.google.api.services.translate.Translate;
+import com.google.api.services.translate.model.TranslationsListResponse;
+import com.google.api.services.translate.model.TranslationsResource;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -23,10 +27,13 @@ public class NlpController {
 
     private static final Logger log = LoggerFactory.getLogger(NlpController.class);
 
-    @Autowired
+    @Resource
     private CloudNaturalLanguageAPI languageApi;
 
-    @Autowired
+    @Resource
+    private Translate translateApi;
+
+    @Resource
     private Client client;
 
     @RequestMapping("/analyzeEntities")
@@ -62,11 +69,15 @@ public class NlpController {
     public String analyze(@RequestParam String text,
                           @RequestParam(required = false, defaultValue = "true") boolean syntax,
                           @RequestParam(required = false, defaultValue = "true") boolean sentiment,
-                          @RequestParam(required = false, defaultValue = "true") boolean entities) throws IOException {
+                          @RequestParam(required = false, defaultValue = "true") boolean entities,
+                          @RequestParam(required = false, defaultValue = "false") boolean translate) throws IOException {
         if (!syntax && !sentiment && !entities) {
             return "Nothing to do here...";
         } else {
             // Call Google Cloud NLP service
+            if (translate) {
+                text = translateToEnglish(text);
+            }
             final Features features = new Features()
                     .setExtractSyntax(syntax)
                     .setExtractDocumentSentiment(sentiment)
@@ -100,5 +111,11 @@ public class NlpController {
         CloudNaturalLanguageAPI.Documents.AnnotateText analyze = languageApi.documents().annotateText(request);
         log.info(msg);
         return analyze.execute();
+    }
+
+    private String translateToEnglish(String text) throws IOException {
+        final TranslationsListResponse text_en = translateApi.translations().list(Collections.singletonList(text), "en").execute();
+        final TranslationsResource translationsResource = text_en.getTranslations().get(0);
+        return translationsResource.getTranslatedText();
     }
 }
