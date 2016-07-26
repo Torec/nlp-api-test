@@ -7,3 +7,4 @@ Sample application with REST api that calls on the [Google Cloud Natural Languag
 -- Add VM option to application run for es.path.home: `-Des.path.home=<path>/elasticsearch-2.3.1` 
 - You need a Google Cloud API Key (e.g. free trial)
 -- Add VM option to application run for google.cloud.api.key `-Dgoogle.cloud.api.key=blablablabla`
+- Probably some Kibana, since that is our goal ;)
